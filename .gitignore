@@ -1,0 +1,15 @@
+# Runtime data (never commit user data)
+data/*.json
+data/*.csv
+
+# Environment / secrets
+.env
+
+# Python artefacts
+__pycache__/
+*.py[cod]
+*.pyo
+.DS_Store
+
+# Streamlit cache
+.streamlit/
