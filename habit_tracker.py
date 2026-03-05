@@ -7,10 +7,18 @@ import os
 st.set_page_config(page_title="Meiyi's Home Reset", layout="centered")
 DB_FILE = "habit_history.csv"
 
+# Helper to load data reliably
 def load_data():
     if os.path.exists(DB_FILE):
-        return pd.read_csv(DB_FILE)
-    return pd.DataFrame(columns=["Date", "Task", "Completed"])
+        df = pd.read_csv(DB_FILE)
+        # Ensure Date is always a date object for comparison
+        df['Date'] = pd.to_datetime(df['Date']).dt.date
+        return df
+    return pd.DataFrame(columns=["Date", "Score"])
+
+# Initialize data in session state so it doesn't reload constantly
+if 'history' not in st.session_state:
+    st.session_state.history = load_data()
 
 # 2. Daily Schedule Logic
 cleaning_schedule = {
@@ -23,7 +31,7 @@ cleaning_schedule = {
     "Sunday": ["Vacuum Floors", "Laundry - Wash & Fold"]
 }
 
-# 3. UI - Sidebar & Header
+# 3. UI Header
 st.title("🏠 Home Habit Tracker")
 today = date.today()
 day_name = today.strftime("%A")
@@ -34,15 +42,35 @@ tasks = cleaning_schedule.get(day_name, [])
 completed_count = 0
 
 st.write("### Today's Tasks")
-for task in tasks:
-    if st.checkbox(task, key=task):
-        completed_count += 1
+# Using a form helps prevent the app from rerunning every single time you check a box
+with st.form("daily_form"):
+    for task in tasks:
+        if st.checkbox(task, key=f"chk_{task}"):
+            completed_count += 1
+    
+    submit_button = st.form_submit_button("Save Daily Progress")
 
 # 5. The "Habit Score" Calculation
 total_tasks = len(tasks)
 score = (completed_count / total_tasks * 100) if total_tasks > 0 else 0
 
-# 6. Visualization
+# 6. Saving Logic (Triggered only by the Form Button)
+if submit_button:
+    df_history = st.session_state.history
+    
+    if not df_history.empty and today in df_history['Date'].values:
+        df_history.loc[df_history['Date'] == today, 'Score'] = score
+        st.toast(f"Updated record for {today}!")
+    else:
+        new_entry = pd.DataFrame([{"Date": today, "Score": score}])
+        df_history = pd.concat([df_history, new_entry], ignore_index=True)
+        st.toast(f"New record saved for {today}!")
+    
+    # Update session state and file
+    st.session_state.history = df_history
+    df_history.to_csv(DB_FILE, index=False)
+
+# 7. Visualization
 st.divider()
 col1, col2 = st.columns(2)
 
@@ -57,30 +85,9 @@ with col2:
     else:
         st.warning("Keep going!")
 
-# 7. Historical Tracking (Optimized for Daily Uniqueness)
-if st.button("Save Daily Progress"):
-    df_history = load_data()
-    
-    # Ensure the Date column is in datetime format for reliable comparison
-    df_history['Date'] = pd.to_datetime(df_history['Date']).dt.date
-    
-    # Create the new entry record
-    new_entry = {"Date": today, "Score": score}
-    
-    if not df_history.empty and today in df_history['Date'].values:
-        # Update the existing row for today
-        df_history.loc[df_history['Date'] == today, 'Score'] = score
-        st.toast(f"Updated record for {today}!")
-    else:
-        # Append as a new row if today doesn't exist yet
-        df_history = pd.concat([df_history, pd.DataFrame([new_entry])], ignore_index=True)
-        st.toast(f"New record saved for {today}!")
-    
-    # Save back to CSV
-    df_history.to_csv(DB_FILE, index=False)
-
-# Show a small trend chart if data exists
-df_history = load_data()
-if not df_history.empty:
+# Show a small trend chart using the session state data
+if not st.session_state.history.empty:
     st.write("### Weekly Momentum")
-    st.line_chart(df_history.set_index("Date")["Score"])
+    # Sort by date so the chart makes sense
+    chart_data = st.session_state.history.sort_values("Date")
+    st.line_chart(chart_data.set_index("Date")["Score"])
