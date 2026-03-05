@@ -78,7 +78,6 @@ if st.button("Save Daily Progress"):
     
     # Save back to CSV
     df_history.to_csv(DB_FILE, index=False)
-    st.toast("Progress Saved!")
 
 # Show a small trend chart if data exists
 df_history = load_data()
