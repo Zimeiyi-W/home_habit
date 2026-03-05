@@ -14,13 +14,13 @@ def load_data():
 
 # 2. Daily Schedule Logic
 cleaning_schedule = {
-    "Monday": ["Wipe Counters", "Empty Trash", "Fridge Clear-out"],
+    "Monday": ["Vacuum Floors", "Wipe Kitchen Counters", "Empty Trash - Monday night", "Fridge Clear-out"],
     "Tuesday": ["Scrub Toilets", "Clean Mirrors", "Sink Scrub"],
     "Wednesday": ["Dust Electronics", "Dust Shelves"],
-    "Thursday": ["Vacuum Floors", "Mop Kitchen"],
-    "Friday": ["Bed Sheets", "Towels", "Fold Laundry"],
-    "Saturday": ["Deep Project (Pantry/Oven)"],
-    "Sunday": ["Meal Prep", "Week Planning"]
+    "Thursday": ["Vacuum Floors", "Organize Clothes"],
+    "Friday": ["Organize Pantry"],
+    "Saturday": ["Clean Stove", "Clean Yards"],
+    "Sunday": ["Vacuum Floors", "Laundry - Wash & Fold"]
 }
 
 # 3. UI - Sidebar & Header
