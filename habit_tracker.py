@@ -57,12 +57,27 @@ with col2:
     else:
         st.warning("Keep going!")
 
-# 7. Historical Tracking (Simplified)
+# 7. Historical Tracking (Optimized for Daily Uniqueness)
 if st.button("Save Daily Progress"):
-    df = load_data()
-    new_entry = pd.DataFrame([{"Date": today, "Score": score}])
-    df = pd.concat([df, new_entry], ignore_index=True)
-    df.to_csv(DB_FILE, index=False)
+    df_history = load_data()
+    
+    # Ensure the Date column is in datetime format for reliable comparison
+    df_history['Date'] = pd.to_datetime(df_history['Date']).dt.date
+    
+    # Create the new entry record
+    new_entry = {"Date": today, "Score": score}
+    
+    if not df_history.empty and today in df_history['Date'].values:
+        # Update the existing row for today
+        df_history.loc[df_history['Date'] == today, 'Score'] = score
+        st.toast(f"Updated record for {today}!")
+    else:
+        # Append as a new row if today doesn't exist yet
+        df_history = pd.concat([df_history, pd.DataFrame([new_entry])], ignore_index=True)
+        st.toast(f"New record saved for {today}!")
+    
+    # Save back to CSV
+    df_history.to_csv(DB_FILE, index=False)
     st.toast("Progress Saved!")
 
 # Show a small trend chart if data exists
