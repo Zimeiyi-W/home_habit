@@ -1,10 +1,17 @@
 import streamlit as st
 import pandas as pd
-from datetime import date
+from datetime import datetime, date
+import pytz  # Handles timezone conversions
 import os
 
 # 1. Setup & Data Loading
 st.set_page_config(page_title="Meiyi's Home Reset", layout="centered")
+# Set the local timezone
+local_tz = pytz.timezone("America/Los_Angeles") 
+# This gets the current time in my timezone
+now_local = datetime.now(local_tz)
+today = now_local.date()
+
 DB_FILE = "habit_history.csv"
 
 # Helper to load data reliably
@@ -42,7 +49,7 @@ tasks = cleaning_schedule.get(day_name, [])
 completed_count = 0
 
 st.write("### Today's Tasks")
-# Using a form helps prevent the app from rerunning every single time you check a box
+# Using a form helps prevent the app from rerunning every single time I check a box
 with st.form("daily_form"):
     for task in tasks:
         if st.checkbox(task, key=f"chk_{task}"):
