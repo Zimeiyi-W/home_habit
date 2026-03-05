@@ -40,7 +40,7 @@ cleaning_schedule = {
 
 # 3. UI Header
 st.title("🏠 Home Habit Tracker")
-today = date.today()
+
 day_name = today.strftime("%A")
 st.subheader(f"Today is {day_name}, {today}")
 
