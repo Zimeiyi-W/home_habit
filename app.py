@@ -24,6 +24,14 @@ from src.core.cleaning import (
     save_schedule,
     save_weekly_record,
 )
+from src.core.checklist import (
+    add_item as checklist_add_item,
+    add_scenario,
+    load_scenarios,
+    remove_item as checklist_remove_item,
+    remove_scenario,
+    save_scenarios,
+)
 from src.database.storage import StorageError
 from src.utils.time_utils import get_day_name, get_today, get_week_start
 
@@ -35,6 +43,7 @@ TZ: str = os.getenv("TZ", "America/Los_Angeles")
 
 SCHEDULE_PATH: Path = DATA_DIR / "cleaning_schedule.json"
 WEEKLY_RECORD_PATH: Path = DATA_DIR / "weekly_record.json"
+SCENARIOS_PATH: Path = DATA_DIR / "scenarios.json"
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -206,7 +215,108 @@ with tab_cleaning:
 # Tab 2 — Go-Out Checklist
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_goout:
-    st.info("Go-Out Checklist — coming in Phase 3.")
+    # ── Load scenarios ────────────────────────────────────────────────────────
+    try:
+        scenarios: dict[str, list[str]] = load_scenarios(SCENARIOS_PATH)
+    except StorageError as exc:
+        st.error(f"Could not load scenarios: {exc}")
+        st.stop()
+
+    scenario_names: list[str] = list(scenarios.keys())
+
+    if not scenario_names:
+        st.info("No scenarios yet. Add one below.")
+    else:
+        # ── Scenario selector ─────────────────────────────────────────────────
+        selected: str = st.selectbox(
+            "Select a scenario", scenario_names, key="scenario_selector"
+        )
+
+        st.subheader(f"🎒 {selected}")
+
+        items: list[str] = scenarios.get(selected, [])
+        if not items:
+            st.caption("No items in this scenario yet.")
+        else:
+            # Stateless checklist — state is not persisted
+            for item in items:
+                st.checkbox(item, value=False, key=f"goout_{selected}_{item}")
+
+    st.divider()
+
+    # ── Edit scenarios expander ───────────────────────────────────────────────
+    with st.expander("✏️ Edit Scenarios", expanded=False):
+        # Reload to reflect any changes made above in the same session
+        try:
+            scenarios = load_scenarios(SCENARIOS_PATH)
+        except StorageError as exc:
+            st.error(f"Could not load scenarios for editing: {exc}")
+            st.stop()
+
+        scenario_names = list(scenarios.keys())
+
+        for scenario_name in scenario_names:
+            st.markdown(f"**{scenario_name}**")
+            scenario_items = scenarios[scenario_name]
+
+            if scenario_items:
+                for idx, it in enumerate(scenario_items):
+                    col_item, col_btn = st.columns([5, 1])
+                    col_item.markdown(it)
+                    if col_btn.button("🗑", key=f"del_item_{scenario_name}_{idx}", help=f"Remove '{it}'"):
+                        try:
+                            updated = checklist_remove_item(scenarios, scenario_name, idx)
+                            save_scenarios(SCENARIOS_PATH, updated)
+                            st.success(f"Removed '{it}' from '{scenario_name}'.")
+                            st.rerun()
+                        except (StorageError, ValueError) as exc:
+                            st.error(f"Could not remove item: {exc}")
+            else:
+                st.caption("No items yet.")
+
+            # Add item inline
+            with st.form(f"add_item_{scenario_name}"):
+                new_item = st.text_input(
+                    "New item",
+                    placeholder="e.g. Sunscreen",
+                    key=f"new_item_{scenario_name}",
+                )
+                col_add, col_del = st.columns([3, 1])
+                add_clicked = col_add.form_submit_button(f"+ Add item")
+                del_clicked = col_del.form_submit_button("🗑 Delete scenario")
+
+            if add_clicked:
+                try:
+                    updated = checklist_add_item(scenarios, scenario_name, new_item)
+                    save_scenarios(SCENARIOS_PATH, updated)
+                    st.success(f"Added '{new_item.strip()}' to '{scenario_name}'.")
+                    st.rerun()
+                except (StorageError, ValueError) as exc:
+                    st.error(f"Could not add item: {exc}")
+
+            if del_clicked:
+                try:
+                    updated = remove_scenario(scenarios, scenario_name)
+                    save_scenarios(SCENARIOS_PATH, updated)
+                    st.success(f"Deleted scenario '{scenario_name}'.")
+                    st.rerun()
+                except (StorageError, ValueError) as exc:
+                    st.error(f"Could not delete scenario: {exc}")
+
+            st.markdown("---")
+
+        # Add a new scenario
+        st.markdown("**Add a new scenario**")
+        with st.form("add_scenario_form"):
+            new_scenario = st.text_input("Scenario name", placeholder="e.g. Beach day")
+            if st.form_submit_button("+ Add Scenario"):
+                try:
+                    updated = add_scenario(scenarios, new_scenario)
+                    save_scenarios(SCENARIOS_PATH, updated)
+                    st.success(f"Added scenario '{new_scenario.strip()}'.")
+                    st.rerun()
+                except (StorageError, ValueError) as exc:
+                    st.error(f"Could not add scenario: {exc}")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Tab 3 — Food Inventory

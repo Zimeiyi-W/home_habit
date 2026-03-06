@@ -2,7 +2,7 @@
 
 **Author:** Meiyi (eng-assisted)
 **Status:** Pre-implementation
-**Last updated:** 2026-03-05 (session 2)
+**Last updated:** 2026-03-05 (session 3)
 
 ---
 
@@ -285,11 +285,11 @@ python-dotenv==1.0.1
 - [x] Build "Missed This Week" panel: checkboxes for past days' unchecked tasks; checking and submitting marks them done and removes them from the list
 - [x] Build schedule editor expander (add/delete tasks, add day)
 
-### Phase 3 — Tab 2: Go-Out Checklist
+### Phase 3 — Tab 2: Go-Out Checklist ✅ Done
 **Goal:** Build scenario-based checklist feature.
-- [ ] Write `src/core/checklist.py`
-- [ ] Seed `data/scenarios.json` on first run
-- [ ] Build Tab 2 UI: scenario selector, stateless checklist, edit expander
+- [x] Write `src/core/checklist.py`
+- [x] Seed `data/scenarios.json` on first run
+- [x] Build Tab 2 UI: scenario selector, stateless checklist, edit expander
 
 ### Phase 4 — Tab 3: Food Inventory
 **Goal:** Build the food inventory tracker with category grouping and expiry alerts.
