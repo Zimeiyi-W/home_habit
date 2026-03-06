@@ -2,7 +2,7 @@
 
 **Author:** Meiyi (eng-assisted)
 **Status:** Pre-implementation
-**Last updated:** 2026-03-05
+**Last updated:** 2026-03-05 (session 2)
 
 ---
 
@@ -241,7 +241,7 @@ UI only — imports from `src/`, calls functions, renders results. Contains no d
 Responsibilities:
 - Page config, timezone setup via time_utils
 - st.tabs() layout with 3 tabs
-- Tab 1: render checklist form, on submit call save_weekly_record; show missed tasks panel; show schedule editor
+- Tab 1: render checklist form, on submit call save_weekly_record; show missed tasks panel with catch-up checkboxes (checked tasks are saved as done and disappear on rerun); show schedule editor
 - Tab 2: render scenario selector + checklist; show edit expander
 - Tab 3: render food list (sorted, color-coded, expiry-flagged); render add-item form
 ```
@@ -282,7 +282,7 @@ python-dotenv==1.0.1
 - [x] Write `src/core/cleaning.py` (schedule CRUD + weekly record + missed task logic)
 - [x] Seed `data/cleaning_schedule.json` on first run
 - [x] Build Tab 1 UI: checklist form → save to `weekly_record.json` on submit
-- [x] Build "Missed This Week" panel: list past days' unchecked tasks
+- [x] Build "Missed This Week" panel: checkboxes for past days' unchecked tasks; checking and submitting marks them done and removes them from the list
 - [x] Build schedule editor expander (add/delete tasks, add day)
 
 ### Phase 3 — Tab 2: Go-Out Checklist

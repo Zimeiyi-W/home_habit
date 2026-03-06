@@ -114,10 +114,33 @@ with tab_cleaning:
     if not missed:
         st.success("Nothing missed so far this week!")
     else:
-        for day, tasks in missed.items():
-            with st.expander(f"{day} — {len(tasks)} missed", expanded=True):
-                for t in tasks:
-                    st.markdown(f"- {t}")
+        with st.form("missed_tasks_form"):
+            catch_up: dict[str, dict[str, bool]] = {}
+            for day, tasks in missed.items():
+                with st.expander(f"{day} — {len(tasks)} missed", expanded=True):
+                    catch_up[day] = {}
+                    for t in tasks:
+                        catch_up[day][t] = st.checkbox(
+                            t, value=False, key=f"missed_{day}_{t}"
+                        )
+
+            submitted_missed = st.form_submit_button(
+                "✅ Mark as Completed", use_container_width=True
+            )
+
+        if submitted_missed:
+            try:
+                for day, task_checks in catch_up.items():
+                    day_record = records.get(day, {})
+                    for task, done in task_checks.items():
+                        if done:
+                            day_record[task] = True
+                    records[day] = day_record
+                save_weekly_record(WEEKLY_RECORD_PATH, week_start, records)
+                st.success("Catch-up tasks saved!")
+                st.rerun()
+            except StorageError as exc:
+                st.error(f"Could not save catch-up tasks: {exc}")
 
     st.divider()
 
