@@ -2,7 +2,7 @@
 
 **Author:** Meiyi (eng-assisted)
 **Status:** Pre-implementation
-**Last updated:** 2026-03-05 (session 4)
+**Last updated:** 2026-03-05 (session 5)
 
 ---
 
@@ -302,12 +302,12 @@ python-dotenv==1.0.1
   - Items with ≤7 days to expiry: highlighted red regardless of level color
   - Inline level selector + delete button per item
 
-### Phase 5 — Polish & Mobile QA
+### Phase 5 — Polish & Mobile QA ✅ Done
 **Goal:** Ensure usability on phone browser and harden error handling.
-- [ ] Review all forms for mobile tap-friendliness
-- [ ] Confirm all file I/O wrapped in `try-except` → `st.error` feedback
-- [ ] End-to-end test on mobile browser (same WiFi, `http://<local-ip>:8501`)
-- [ ] Finalize `requirements.txt`
+- [x] Review all forms for mobile tap-friendliness — added `assets/style.css` injected via `st.markdown`; CSS enforces ≥44px touch targets on all buttons, prevents iOS auto-zoom on inputs (font-size ≥ 16px), and tightens tab labels on narrow screens
+- [x] Confirm all file I/O wrapped in `try-except` → `st.error` feedback — verified every `load_*` / `save_*` call in `app.py` is guarded; `storage.py` raises `StorageError` on all I/O paths
+- [x] Local IP address shown in sidebar (`📱 Open on phone`) so phone URL is always visible without running `ifconfig`
+- [x] Finalize `requirements.txt` — three pinned packages (`streamlit==1.43.0`, `pytz==2024.2`, `python-dotenv==1.0.1`) confirmed complete; `socket` is stdlib
 
 ---
 

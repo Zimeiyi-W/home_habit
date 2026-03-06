@@ -7,6 +7,7 @@ Responsibilities:
 """
 
 import os
+import socket
 from datetime import date
 from pathlib import Path
 
@@ -52,6 +53,7 @@ load_dotenv()
 
 DATA_DIR: Path = Path(os.getenv("DATA_DIR", "data"))
 TZ: str = os.getenv("TZ", "America/Los_Angeles")
+ASSETS_DIR: Path = Path("assets")
 
 SCHEDULE_PATH: Path = DATA_DIR / "cleaning_schedule.json"
 WEEKLY_RECORD_PATH: Path = DATA_DIR / "weekly_record.json"
@@ -64,6 +66,22 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="collapsed",
 )
+
+# ── Mobile-friendly CSS ────────────────────────────────────────────────────────
+try:
+    css_path = ASSETS_DIR / "style.css"
+    st.markdown(f"<style>{css_path.read_text()}</style>", unsafe_allow_html=True)
+except OSError:
+    pass  # Non-critical — app works without custom styles
+
+# ── Sidebar: local network address for phone access ───────────────────────────
+with st.sidebar:
+    try:
+        local_ip = socket.gethostbyname(socket.gethostname())
+    except OSError:
+        local_ip = "127.0.0.1"
+    st.markdown("**📱 Open on phone**")
+    st.code(f"http://{local_ip}:8501", language=None)
 
 # ── Shared time context (computed once per run) ───────────────────────────────
 today: date = get_today(TZ)

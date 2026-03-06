@@ -1,0 +1,39 @@
+/* ── Mobile-friendly touch targets ───────────────────────────────────────── */
+
+/* Ensure all buttons meet the 44px minimum touch target (Apple HIG / WCAG) */
+button[data-testid="baseButton-secondary"],
+button[data-testid="baseButton-primary"] {
+    min-height: 44px !important;
+    min-width: 44px !important;
+}
+
+/* Give icon-only buttons (🗑) a comfortable square tap area */
+div[data-testid="stColumn"] button {
+    min-height: 44px !important;
+    width: 100% !important;
+}
+
+/* ── Input sizing ─────────────────────────────────────────────────────────── */
+
+/* Prevent iOS from zooming in on focus (requires font-size ≥ 16px) */
+input[type="text"],
+input[type="date"],
+textarea,
+select {
+    font-size: 16px !important;
+}
+
+/* ── Form spacing ─────────────────────────────────────────────────────────── */
+
+/* Extra breathing room between form rows on small screens */
+@media (max-width: 600px) {
+    div[data-testid="stForm"] {
+        padding: 0.5rem 0 !important;
+    }
+
+    /* Tighten tab label font so all three tabs fit without truncation */
+    button[data-baseweb="tab"] {
+        font-size: 0.82rem !important;
+        padding: 0.4rem 0.5rem !important;
+    }
+}
