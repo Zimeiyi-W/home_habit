@@ -2,7 +2,7 @@
 
 **Author:** Meiyi (eng-assisted)
 **Status:** Pre-implementation
-**Last updated:** 2026-03-05 (session 3)
+**Last updated:** 2026-03-05 (session 4)
 
 ---
 
@@ -291,11 +291,11 @@ python-dotenv==1.0.1
 - [x] Seed `data/scenarios.json` on first run
 - [x] Build Tab 2 UI: scenario selector, stateless checklist, edit expander
 
-### Phase 4 — Tab 3: Food Inventory
+### Phase 4 — Tab 3: Food Inventory ✅ Done
 **Goal:** Build the food inventory tracker with category grouping and expiry alerts.
-- [ ] Write `src/core/food.py` (CRUD + sort + expiry check)
-- [ ] Initialize `data/food_inventory.json` as `[]` on first run
-- [ ] Build Tab 3 UI:
+- [x] Write `src/core/food.py` (CRUD + sort + expiry check)
+- [x] Initialize `data/food_inventory.json` as `[]` on first run
+- [x] Build Tab 3 UI:
   - Add-item form: name, category dropdown, level dropdown, expiry date picker
   - Display two groups: Fresh Produce / Longer Shelf Life
   - Within each group: rows sorted by expiry date, color-coded volume level

@@ -32,6 +32,18 @@ from src.core.checklist import (
     remove_scenario,
     save_scenarios,
 )
+from src.core.food import (
+    LEVEL_STYLE,
+    VALID_CATEGORIES,
+    VALID_LEVELS,
+    add_item as food_add_item,
+    is_expiring_soon,
+    load_food,
+    remove_item as food_remove_item,
+    save_food,
+    sort_items,
+    update_item as food_update_item,
+)
 from src.database.storage import StorageError
 from src.utils.time_utils import get_day_name, get_today, get_week_start
 
@@ -44,6 +56,7 @@ TZ: str = os.getenv("TZ", "America/Los_Angeles")
 SCHEDULE_PATH: Path = DATA_DIR / "cleaning_schedule.json"
 WEEKLY_RECORD_PATH: Path = DATA_DIR / "weekly_record.json"
 SCENARIOS_PATH: Path = DATA_DIR / "scenarios.json"
+FOOD_PATH: Path = DATA_DIR / "food_inventory.json"
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -322,4 +335,91 @@ with tab_goout:
 # Tab 3 — Food Inventory
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_food:
-    st.info("Food Inventory — coming in Phase 4.")
+    # ── Load inventory ────────────────────────────────────────────────────────
+    try:
+        food_items: list[dict] = load_food(FOOD_PATH)
+    except StorageError as exc:
+        st.error(f"Could not load food inventory: {exc}")
+        st.stop()
+
+    sorted_items: list[dict] = sort_items(food_items)
+
+    # ── Display inventory by category ─────────────────────────────────────────
+    for category in VALID_CATEGORIES:
+        category_items = [it for it in sorted_items if it.get("category") == category]
+        st.subheader(category)
+
+        if not category_items:
+            st.caption("No items in this category.")
+        else:
+            for item in category_items:
+                # Resolve the original index in the unsorted list for mutations
+                original_idx = food_items.index(item)
+
+                expiring = is_expiring_soon(item["expiry_date"], today)
+                level = item.get("level", "Low")
+                style = LEVEL_STYLE.get(level, LEVEL_STYLE["Low"])
+
+                # Row: name + expiry | level selector | delete
+                col_name, col_level, col_del = st.columns([4, 2, 1])
+
+                # Name + expiry badge
+                expiry_label = (
+                    f"⚠️ Expires {item['expiry_date']}"
+                    if expiring
+                    else f"Exp {item['expiry_date']}"
+                )
+                name_md = (
+                    f"**{item['name']}**  \n"
+                    f"<span style='color:#dc3545;font-size:0.8em'>{expiry_label}</span>"
+                    if expiring
+                    else f"**{item['name']}**  \n"
+                    f"<span style='color:#6c757d;font-size:0.8em'>{expiry_label}</span>"
+                )
+                col_name.markdown(name_md, unsafe_allow_html=True)
+
+                # Inline level selector
+                new_level = col_level.selectbox(
+                    "Level",
+                    options=list(VALID_LEVELS),
+                    index=list(VALID_LEVELS).index(level),
+                    key=f"food_level_{original_idx}",
+                    label_visibility="collapsed",
+                )
+                if new_level != level:
+                    try:
+                        updated_items = food_update_item(food_items, original_idx, new_level)
+                        save_food(FOOD_PATH, updated_items)
+                        st.rerun()
+                    except (StorageError, ValueError) as exc:
+                        st.error(f"Could not update level: {exc}")
+
+                # Delete button
+                if col_del.button("🗑", key=f"food_del_{original_idx}", help=f"Remove '{item['name']}'"):
+                    try:
+                        updated_items = food_remove_item(food_items, original_idx)
+                        save_food(FOOD_PATH, updated_items)
+                        st.rerun()
+                    except (StorageError, ValueError) as exc:
+                        st.error(f"Could not remove item: {exc}")
+
+        st.divider()
+
+    # ── Add item form ─────────────────────────────────────────────────────────
+    with st.expander("➕ Add Item", expanded=not food_items):
+        with st.form("add_food_form"):
+            new_name = st.text_input("Name", placeholder="e.g. Spinach")
+            new_category = st.selectbox("Category", options=list(VALID_CATEGORIES))
+            new_level = st.selectbox("Stock Level", options=list(VALID_LEVELS))
+            new_expiry = st.date_input("Expiry Date", value=today, min_value=today)
+
+            if st.form_submit_button("➕ Add to Inventory", use_container_width=True):
+                try:
+                    updated_items = food_add_item(
+                        food_items, new_name, new_category, new_level, new_expiry
+                    )
+                    save_food(FOOD_PATH, updated_items)
+                    st.success(f"Added '{new_name.strip()}' to inventory.")
+                    st.rerun()
+                except (StorageError, ValueError) as exc:
+                    st.error(f"Could not add item: {exc}")
